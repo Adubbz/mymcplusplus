@@ -23,7 +23,7 @@ It is based on the classic mymc utility created by Ross Ridge."""
 
 setup(
     name="mymcplus",
-    version="3.0.3",
+    version="3.0.4",
     description="A PlayStation 2 memory card manager",
     long_description=long_description,
     long_description_content_type="text/plain",
