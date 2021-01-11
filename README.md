@@ -1,7 +1,7 @@
 
 # mymc+
 
-[![Build Status](https://travis-ci.org/thestr4ng3r/mymcplus.svg?branch=master)](https://travis-ci.org/thestr4ng3r/mymcplus)
+[![builds.sr.ht status](https://builds.sr.ht/~thestr4ng3r/mymcplus.svg)](https://builds.sr.ht/~thestr4ng3r/mymcplus)
 
 mymc+ is a PlayStation 2 memory card manager for to be used with
 .ps2 images as created by the PCSX2 emulator for example.
@@ -93,6 +93,11 @@ mymcplus -i empty.ps2 format
 ```
 
 creates the file `empty.ps2` and formats it as an empty memory card.
+
+## Contributing
+
+Send bug reports or patches using [git send-email](https://git-send-email.io/)
+to mymcplus@metallic.software.
 
 ## License
 

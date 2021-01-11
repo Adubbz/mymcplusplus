@@ -27,7 +27,7 @@ setup(
     description="A PlayStation 2 memory card manager",
     long_description=long_description,
     long_description_content_type="text/plain",
-    url="https://github.com/thestr4ng3r/mymcplus",
+    url="https://git.sr.ht/~thestr4ng3r/mymcplus",
     author="Florian Märkl",
     license="GPLv3",
     clasifiers=[
@@ -49,6 +49,8 @@ setup(
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Games/Entertainment",
         "Topic :: Multimedia :: Graphics :: 3D Rendering",
         "Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator",

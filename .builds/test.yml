@@ -1,0 +1,12 @@
+image: alpine/edge
+
+sources:
+  - https://git.sr.ht/~thestr4ng3r/mymcplus
+
+packages:
+  - python3
+  - py3-pytest
+
+tasks:
+  - test: |
+      pytest
