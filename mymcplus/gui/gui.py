@@ -473,10 +473,10 @@ class GuiFrame(wx.Frame):
         selected = self.dirlist.selected
         dirtable = self.dirlist.dirtable
 
-        dirnames = [dirtable[i][0][8].decode("ascii")
+        dirnames = [dirtable[i].dirent[8].decode("ascii")
                 for i in selected]
         if len(selected) == 1:
-            title = dirtable[list(selected)[0]][3]
+            title = dirtable[list(selected)[0]].title
             s = dirnames[0] + " (" + utils.single_title(title) + ")"
         else:
             s = ", ".join(dirnames)
