@@ -17,10 +17,13 @@
 
 """Graphical user-interface for mymc+."""
 
+import copy
 import os
 import sys
 import struct
 import io
+
+from pathlib import Path
 
 # Work around a problem with mixing wx and py2exe
 if os.name == "nt" and hasattr(sys, "setdefaultencoding"):
@@ -28,6 +31,7 @@ if os.name == "nt" and hasattr(sys, "setdefaultencoding"):
 import wx
 
 from .. import ps2mc, ps2iconsys
+from ..round import *
 from ..save import ps2save
 from .icon_window import IconWindow
 from .dirlist_control import DirListControl
@@ -85,6 +89,7 @@ class GuiFrame(wx.Frame):
     ID_CMD_IMPORT = 104
     ID_CMD_DELETE = wx.ID_DELETE
     ID_CMD_ASCII = 106
+    ID_CMD_SAVEAS = 107
 
     def message_box(self, message, caption = "mymcplus", style = wx.OK,
             x = -1, y = -1):
@@ -127,6 +132,7 @@ class GuiFrame(wx.Frame):
 
         self.Bind(wx.EVT_MENU, self.evt_cmd_exit, id=self.ID_CMD_EXIT)
         self.Bind(wx.EVT_MENU, self.evt_cmd_open, id=self.ID_CMD_OPEN)
+        self.Bind(wx.EVT_MENU, self.evt_cmd_saveas, id=self.ID_CMD_SAVEAS)
         self.Bind(wx.EVT_MENU, self.evt_cmd_export, id=self.ID_CMD_EXPORT)
         self.Bind(wx.EVT_MENU, self.evt_cmd_import, id=self.ID_CMD_IMPORT)
         self.Bind(wx.EVT_MENU, self.evt_cmd_delete, id=self.ID_CMD_DELETE)
@@ -134,6 +140,8 @@ class GuiFrame(wx.Frame):
 
         filemenu = wx.Menu()
         filemenu.Append(self.ID_CMD_OPEN, "&Open...", "Opens an existing PS2 memory card image.")
+        filemenu.AppendSeparator()
+        self.saveas_menu_item = filemenu.Append(self.ID_CMD_SAVEAS, "&Save As...")
         filemenu.AppendSeparator()
         self.export_menu_item = filemenu.Append(self.ID_CMD_EXPORT, "&Export...", "Export a save file from this image.")
         self.import_menu_item = filemenu.Append(self.ID_CMD_IMPORT, "&Import...", "Import a save file into this image.")
@@ -334,7 +342,7 @@ class GuiFrame(wx.Frame):
     def evt_cmd_open(self, event = None):
         fn = wx.FileSelector("Open Memory Card Image",
                      self.config.get_memcard_dir(""),
-                     "Mcd001.ps2", "ps2", "*.ps2;*.mc2",
+                     "Mcd001.ps2", "ps2", "Memory Card Image (*.ps2;*.mc2)|*.ps2;*.mc2",
                      wx.FD_FILE_MUST_EXIST | wx.FD_OPEN,
                      self)
         if fn == "":
@@ -344,6 +352,44 @@ class GuiFrame(wx.Frame):
             dirname = os.path.dirname(fn)
             if os.path.isabs(dirname):
                 self.config.set_memcard_dir(dirname)
+
+    def evt_cmd_saveas(self, event):
+        mc = self.mc
+        if mc == None:
+            return
+        
+        fn = wx.FileSelector("Save As",
+                self.config.get_memcard_dir(""), Path(self.mcname).stem + '.ps2', "ps2",
+                "PCSX2 Image|*.ps2"
+                "|MemCard PRO2 Image|*.mc2",
+                (wx.FD_OVERWRITE_PROMPT
+                | wx.FD_SAVE),
+                self)
+        if fn == "":
+            return
+        try:
+            filename = fn.lower()
+            if filename.endswith(".mc2"):
+                ecc = False
+            else:
+                ecc = True
+            params = (ecc,
+                ps2mc.PS2MC_STANDARD_PAGE_SIZE,
+                ps2mc.PS2MC_STANDARD_PAGES_PER_ERASE_BLOCK,
+                ps2mc.PS2MC_STANDARD_PAGES_PER_CARD
+            )
+
+            with open(fn, "w+b") as f:
+                new_mc = ps2mc.ps2mc(f, True, params)
+                for dir_tab_entry in self.dirlist.dirtable:
+                    dirname = dir_tab_entry.dirent[8].decode("ascii")
+                    new_mc.import_save_file(mc.export_save_file("/" + dirname), False)
+
+                new_mc.flush()
+                new_mc.close()
+        except EnvironmentError as value:
+            self.mc_error(value, fn)
+            return
 
     def evt_cmd_export(self, event):
         mc = self.mc

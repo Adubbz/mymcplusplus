@@ -765,6 +765,7 @@ class ps2mc(object):
         erased = b"\0" * page_size
         if not with_ecc:
             self.spare_size = 0
+            self.raw_page_size = self.page_size
         else:
             ecc = b"".join([bytes(s) for s in ecc_calculate_page(erased)])
             erased += ecc + b"\0" * (self.spare_size - len(ecc))
