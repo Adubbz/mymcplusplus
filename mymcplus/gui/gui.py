@@ -334,7 +334,7 @@ class GuiFrame(wx.Frame):
     def evt_cmd_open(self, event = None):
         fn = wx.FileSelector("Open Memory Card Image",
                      self.config.get_memcard_dir(""),
-                     "Mcd001.ps2", "ps2", "*.ps2",
+                     "Mcd001.ps2", "ps2", "*.ps2;*.mc2",
                      wx.FD_FILE_MUST_EXIST | wx.FD_OPEN,
                      self)
         if fn == "":

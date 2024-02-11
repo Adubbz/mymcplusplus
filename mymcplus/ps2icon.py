@@ -205,6 +205,10 @@ class Icon:
 
 
     def __load_texture(self, data, length, offset):
+        # No textures to load
+        if offset == length:
+            return offset
+        
         if self.tex_type == 0x7:
             return self.__load_texture_uncompressed(data, length, offset)
         else:

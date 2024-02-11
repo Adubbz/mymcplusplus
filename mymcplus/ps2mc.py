@@ -826,6 +826,8 @@ class ps2mc(object):
         if len(spare) != self.spare_size:
             raise corrupt("attempted to read past EOF"
                     " (page %05X)" % n, f)
+        if n == 0 and spare == b'\xff' * 16:
+            raise ecc_error("ECC data absent")
         (status, page, spare) = ecc_check_page(page, spare)
         if status == ECC_CHECK_FAILED:
             raise ecc_error("Unrecoverable ECC error (page %d)"
