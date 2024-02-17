@@ -1,4 +1,4 @@
-name: Upload Python Package
+name: Build Python Package
 
 on:
   push:
@@ -24,3 +24,8 @@ jobs:
         pip install build
     - name: Build package
       run: python -m build
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheels
+        path: dist/*.whl
