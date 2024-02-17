@@ -6,11 +6,9 @@ It is based on [mymc+](https://git.sr.ht/~thestr4ng3r/mymcplus) by Florian Märk
 
 Changes that have been made from the original code include the following:
 
-* Ported to Python 3 and wxPython Phoenix
-* Replaced the natively implemented 3D icon renderer with a cross-platform solution using OpenGL 3.2 Core
-* Added support for importing PSV files (as created by the PlayStation 3)
-* Added a py.test based test suite
-* Many other small refactorings...
+* Added support for MemCard PRO2 .mc2 files
+* Usability improvements 
+* Various bug fixes
 
 Please note that mymc++ is released under the **GPLv3, not Public Domain**!
 
@@ -85,7 +83,7 @@ It is always necessary to specify the path to a memory card image
 with `-i <path>` first. For example:
 
 ```
-mymcplus -i empty.ps2 format
+mymcplusplus -i empty.ps2 format
 ```
 
 creates the file `empty.ps2` and formats it as an empty memory card.

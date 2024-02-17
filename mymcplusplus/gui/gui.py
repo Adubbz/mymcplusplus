@@ -30,6 +30,10 @@ if os.name == "nt" and hasattr(sys, "setdefaultencoding"):
     sys.setdefaultencoding("mbcs")
 import wx
 
+import ctypes
+try: ctypes.windll.shcore.SetProcessDpiAwareness(True)
+except: pass
+
 from .. import ps2mc, ps2iconsys
 from ..round import *
 from ..save import ps2save
@@ -120,8 +124,8 @@ class GuiFrame(wx.Frame):
         self.mcname = None
         self.icon_win = None
 
-        size = (800, 400)
-        wx.Frame.__init__(self, parent, wx.ID_ANY, title, size = size)
+        wx.Frame.__init__(self, parent, wx.ID_ANY, title)
+        self.SetClientSize(self.FromDIP((800, 400)))
 
         self.Bind(wx.EVT_CLOSE, self.evt_close)
 
@@ -157,8 +161,7 @@ class GuiFrame(wx.Frame):
 
         self.CreateToolBar(wx.TB_HORIZONTAL)
         self.toolbar = toolbar = self.GetToolBar()
-        tbsize = (32, 32)
-        toolbar.SetToolBitmapSize(tbsize)
+        toolbar.SetToolBitmapSize(self.FromDIP(wx.Size(50, 50)))
         add_tool(toolbar, self.ID_CMD_OPEN, "Open", wx.ART_FILE_OPEN, "open.png")
         toolbar.AddSeparator()
         add_tool(toolbar, self.ID_CMD_IMPORT, "Import", None, "import.png")
