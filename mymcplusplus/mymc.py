@@ -712,7 +712,7 @@ def main(argv=sys.argv):
     for cmd in sorted(cmd_table.keys()):
         description += "\n   " + cmd + ": " + cmd_table[cmd][3]
         
-    version = ("mymc+ "
+    version = ("mymc++ "
            + verbuild.MYMC_VERSION_MAJOR
            + "." + verbuild.MYMC_VERSION_BUILD)
 

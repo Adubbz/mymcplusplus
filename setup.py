@@ -18,17 +18,17 @@
 from setuptools import setup
 
 long_description = \
-"""mymc+ is a PlayStation 2 memory card manager for to be used with .ps2 images as created by the PCSX2 emulator for example.
-It is based on the classic mymc utility created by Ross Ridge."""
+"""mymc++ is a PlayStation 2 memory card manager for to be used with .ps2 images as created by the PCSX2 emulator for example.
+It is based on mymc+ by Florian Märkl and the classic mymc utility created by Ross Ridge."""
 
 setup(
-    name="mymcplus",
-    version="3.0.5",
+    name="mymcplusplus",
+    version="3.1.0",
     description="A PlayStation 2 memory card manager",
     long_description=long_description,
     long_description_content_type="text/plain",
-    url="https://git.sr.ht/~thestr4ng3r/mymcplus",
-    author="Florian Märkl",
+    url="https://github.com/Adubbz/mymcplusplus",
+    author="Adubbz",
     license="GPLv3",
     clasifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -54,17 +54,16 @@ setup(
         "Topic :: Games/Entertainment",
         "Topic :: Multimedia :: Graphics :: 3D Rendering",
         "Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator",
-        "Topic :: System :: Emulators",
         "Topic :: System :: Archiving",
         "Topic :: System :: Archiving :: Backup",
         "Topic :: System :: Filesystems",
         "Topic :: Utilities"
     ],
-    keywords="playstation ps2 mymc memory card save emulator",
-    packages=["mymcplus", "mymcplus.gui", "mymcplus.save"],
+    keywords="playstation ps2 mymc memory card save",
+    packages=["mymcplusplus", "mymcplusplus.gui", "mymcplusplus.save"],
     entry_points={
         "console_scripts": [
-            "mymcplus = mymcplus.mymc:main"
+            "mymcplusplus = mymcplusplus.mymc:main"
         ]
     },
     python_requires=">=3.4",

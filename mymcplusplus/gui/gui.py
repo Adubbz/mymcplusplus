@@ -15,7 +15,7 @@
 # along with mymc+.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""Graphical user-interface for mymc+."""
+"""Graphical user-interface for mymc++."""
 
 import copy
 import os
@@ -46,7 +46,7 @@ class GuiConfig(wx.Config):
     ascii = "ASCII Descriptions"
 
     def __init__(self):
-        wx.Config.__init__(self, "mymc+", style = wx.CONFIG_USE_LOCAL_FILE)
+        wx.Config.__init__(self, "mymc++", style = wx.CONFIG_USE_LOCAL_FILE)
 
     def get_memcard_dir(self, default = None):
         return self.Read(GuiConfig.memcard_dir, default)
@@ -91,7 +91,7 @@ class GuiFrame(wx.Frame):
     ID_CMD_ASCII = 106
     ID_CMD_SAVEAS = 107
 
-    def message_box(self, message, caption = "mymcplus", style = wx.OK,
+    def message_box(self, message, caption = "mymcplusplus", style = wx.OK,
             x = -1, y = -1):
         return wx.MessageBox(message, caption, style, self, x, y)
 
@@ -559,7 +559,7 @@ def run(filename = None):
     """Display a GUI for working with memory card images."""
 
     wx_app = wx.App()
-    frame = GuiFrame(None, "mymc+", filename)
+    frame = GuiFrame(None, "mymc++", filename)
     return wx_app.MainLoop()
 
 if __name__ == "__main__":

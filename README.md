@@ -1,13 +1,9 @@
+# mymc++
 
-# mymc+
+mymc++ is a PlayStation 2 memory card manager for use with .ps2 images created by PCSX2, as well as .mc2 files created by the MemCard PRO2.
 
-[![builds.sr.ht status](https://builds.sr.ht/~thestr4ng3r/mymcplus.svg)](https://builds.sr.ht/~thestr4ng3r/mymcplus)
+It is based on [mymc+](https://git.sr.ht/~thestr4ng3r/mymcplus) by Florian Märkl and the classic [mymc](http://www.csclub.uwaterloo.ca:11068/mymc/) utility created by Ross Ridge.
 
-mymc+ is a PlayStation 2 memory card manager for to be used with
-.ps2 images as created by the PCSX2 emulator for example.
-
-It is based on the classic [mymc](http://www.csclub.uwaterloo.ca:11068/mymc/)
-utility created by Ross Ridge and released as Public Domain.
 Changes that have been made from the original code include the following:
 
 * Ported to Python 3 and wxPython Phoenix
@@ -16,7 +12,7 @@ Changes that have been made from the original code include the following:
 * Added a py.test based test suite
 * Many other small refactorings...
 
-Please note that mymc+ is released under the **GPLv3, not Public Domain**!
+Please note that mymc++ is released under the **GPLv3, not Public Domain**!
 
 Here is an overview of most features:
 
@@ -30,18 +26,18 @@ Here is an overview of most features:
 
 ## Installation
 
-mymc+ is available on [PyPI](https://pypi.org/project/mymcplus/).
+mymc++ is available on [PyPI](https://pypi.org/project/mymcplusplus/).
 You can install it, including the GUI, using pip:
 
 ```
-pip install mymcplus[gui]
+pip install mymcplusplus[gui]
 ```
 
 If you only wish to install the command line interface, simply omit the
 gui extra:
 
 ```
-pip install mymcplus
+pip install mymcplusplus
 ```
 
 ## Usage
@@ -50,7 +46,7 @@ If the GUI component is installed (i.e. wxPython can be found), it can
 simply be started using the following command:
 
 ```
-mymcplus
+mymcplusplus
 ```
 
 ### Command Line Interface
@@ -58,7 +54,7 @@ mymcplus
 The command line interface can be used like this:
 
 ```
-Usage: /usr/bin/mymcplus [-ih] memcard.ps2 command [...]
+Usage: /usr/bin/mymcplusplus [-ih] memcard.ps2 command [...]
 
 Manipulate PS2 memory card images.
 
@@ -93,26 +89,3 @@ mymcplus -i empty.ps2 format
 ```
 
 creates the file `empty.ps2` and formats it as an empty memory card.
-
-## Contributing
-
-Send bug reports or patches using [git send-email](https://git-send-email.io/)
-to mymcplus@metallic.software.
-
-## License
-
-mymc+  
-by Florian Märkl, based on mymc by Ross Ridge
-
-This program is free software: you can redistribute it and/or modify  
-it under the terms of the GNU General Public License as published by  
-the Free Software Foundation, either version 3 of the License, or  
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,  
-but WITHOUT ANY WARRANTY; without even the implied warranty of  
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the  
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License  
-along with this program.  If not, see <https://www.gnu.org/licenses/>.

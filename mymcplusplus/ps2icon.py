@@ -205,7 +205,7 @@ class Icon:
 
 
     def __load_texture(self, data, length, offset):
-        # No textures to load. This may be the case when are colored without a texture.
+        # No textures to load. This may be the case when vertices are colored without a texture.
         if offset == length:
             self.texture = [0xFFFF]
             return offset
