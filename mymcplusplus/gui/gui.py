@@ -190,6 +190,8 @@ class GuiFrame(wx.Frame):
         panel_sizer.Add(splitter_window, wx.EXPAND, wx.EXPAND)
         panel.SetSizer(panel_sizer)
 
+        panel.Bind(wx.EVT_CHAR_HOOK, self.evt_key_pressed)
+
         info_win = wx.Window(splitter_window)
         icon_win = IconWindow(info_win, self)
         if icon_win.failed:
@@ -292,6 +294,45 @@ class GuiFrame(wx.Frame):
         self.mcname = filename
         self.SetTitle(filename + " - " + self.title)
         self.refresh()
+
+    def delete_selected(self):
+        mc = self.mc
+        if mc == None:
+            return
+
+        selected = self.dirlist.selected
+        dirtable = self.dirlist.dirtable
+
+        dirnames = [dirtable[i].dirent[8].decode("ascii")
+                for i in selected]
+        if len(selected) == 1:
+            title = dirtable[list(selected)[0]].title
+            s = dirnames[0] + " (" + utils.single_title(title) + ")"
+        else:
+            s = ", ".join(dirnames)
+            if len(s) > 200:
+                s = s[:200] + "..."
+        r = self.message_box("Are you sure you want to delete "
+                     + s + "?",
+                     "Delete Save File Confirmation",
+                     wx.YES_NO)
+        if r != wx.YES:
+            return
+
+        for dn in dirnames:
+            try:
+                mc.rmdir("/" + dn)
+            except EnvironmentError as value:
+                self.mc_error(value, dn)
+
+        mc.check()
+        self.refresh()
+
+    def evt_key_pressed(self, event):
+        keycode = event.GetUnicodeKey()
+
+        if keycode == wx.WXK_DELETE:
+            self.delete_selected()
 
     def evt_menu_open(self, event):
         self.import_menu_item.Enable(self.mc is not None)
@@ -512,37 +553,7 @@ class GuiFrame(wx.Frame):
         self.refresh()
 
     def evt_cmd_delete(self, event):
-        mc = self.mc
-        if mc == None:
-            return
-
-        selected = self.dirlist.selected
-        dirtable = self.dirlist.dirtable
-
-        dirnames = [dirtable[i].dirent[8].decode("ascii")
-                for i in selected]
-        if len(selected) == 1:
-            title = dirtable[list(selected)[0]].title
-            s = dirnames[0] + " (" + utils.single_title(title) + ")"
-        else:
-            s = ", ".join(dirnames)
-            if len(s) > 200:
-                s = s[:200] + "..."
-        r = self.message_box("Are you sure you want to delete "
-                     + s + "?",
-                     "Delete Save File Confirmation",
-                     wx.YES_NO)
-        if r != wx.YES:
-            return
-
-        for dn in dirnames:
-            try:
-                mc.rmdir("/" + dn)
-            except EnvironmentError as value:
-                self.mc_error(value, dn)
-
-        mc.check()
-        self.refresh()
+        self.delete_selected()
 
     def evt_cmd_ascii(self, event):
         self.config.set_ascii(not self.config.get_ascii())
