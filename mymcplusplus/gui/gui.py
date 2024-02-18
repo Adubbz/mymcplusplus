@@ -25,14 +25,17 @@ import io
 
 from pathlib import Path
 
-# Work around a problem with mixing wx and py2exe
-if os.name == "nt" and hasattr(sys, "setdefaultencoding"):
-    sys.setdefaultencoding("mbcs")
-import wx
+# Windows-specific fixes
+if os.name == "nt":
+    # Work around a problem with mixing wx and py2exe
+    if hasattr(sys, "setdefaultencoding"):
+        sys.setdefaultencoding("mbcs")
 
-import ctypes
-try: ctypes.windll.shcore.SetProcessDpiAwareness(True)
-except: pass
+    # Fix DPI awareness
+    import ctypes
+    try: ctypes.windll.shcore.SetProcessDpiAwareness(True)
+    except: pass
+import wx
 
 from .. import ps2mc, ps2iconsys
 from ..round import *
@@ -418,9 +421,9 @@ class GuiFrame(wx.Frame):
             else:
                 ecc = True
             params = (ecc,
-                ps2mc.PS2MC_STANDARD_PAGE_SIZE,
-                ps2mc.PS2MC_STANDARD_PAGES_PER_ERASE_BLOCK,
-                ps2mc.PS2MC_STANDARD_PAGES_PER_CARD
+                mc.page_size,
+                mc.pages_per_erase_block,
+                mc.clusters_per_card * mc.pages_per_cluster
             )
 
             with open(fn, "w+b") as f:
