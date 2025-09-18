@@ -389,7 +389,7 @@ class GuiFrame(wx.Frame):
     def evt_cmd_open(self, event = None):
         fn = wx.FileSelector("Open Memory Card Image",
                      self.config.get_memcard_dir(""),
-                     "Mcd001.ps2", "ps2", "Memory Card Image (*.ps2;*.mc2)|*.ps2;*.mc2",
+                     "Mcd001.ps2", "ps2", "Memory Card Image (*.ps2;*.mc2;*.mcd)|*.ps2;*.mc2;*.mcd",
                      wx.FD_FILE_MUST_EXIST | wx.FD_OPEN,
                      self)
         if fn == "":
@@ -408,7 +408,7 @@ class GuiFrame(wx.Frame):
         fn = wx.FileSelector("Save As",
                 self.config.get_memcard_dir(""), Path(self.mcname).stem + '.ps2', "ps2",
                 "PCSX2 Image|*.ps2"
-                "|MemCard PRO2 Image|*.mc2",
+                "|Multipurpose Memory Card Emulator - Virtual Memory Card|*.mc2;*.mcd",
                 (wx.FD_OVERWRITE_PROMPT
                 | wx.FD_SAVE),
                 self)
@@ -416,7 +416,7 @@ class GuiFrame(wx.Frame):
             return
         try:
             filename = fn.lower()
-            if filename.endswith(".mc2"):
+            if filename.endswith(".mc2;*.mcd"):
                 ecc = False
             else:
                 ecc = True
