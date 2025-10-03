@@ -25,7 +25,7 @@ jobs:
     - name: Build package
       run: python -m build
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: wheels
         path: dist/*.whl
