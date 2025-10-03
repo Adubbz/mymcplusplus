@@ -169,6 +169,7 @@ class GuiFrame(wx.Frame):
         toolbar.AddSeparator()
         add_tool(toolbar, self.ID_CMD_IMPORT, "Import", None, "import.png")
         add_tool(toolbar, self.ID_CMD_EXPORT, "Export", None, "export.png")
+        add_tool(toolbar, self.ID_CMD_DELETE, "Delete", None, "delete.png")
         toolbar.Realize()
 
         self.statusbar = self.CreateStatusBar(2, style=wx.STB_SIZEGRIP)
