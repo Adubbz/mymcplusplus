@@ -77,6 +77,7 @@ Options:
   --version         show program's version number and exit
   -h, --help        show this help message and exit
   -i, --ignore-ecc  Ignore ECC errors while reading.
+  -e, --no-ecc      Create virtual memory card without ecc. Useful for SD2PSX/MemCard PRO2
 ```
 
 It is always necessary to specify the path to a memory card image
