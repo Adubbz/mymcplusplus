@@ -257,6 +257,7 @@ class GuiFrame(wx.Frame):
             self.evt_dirlist_select,
             self.config,
         )
+        self.dirlist._on_navigate = self._on_dirlist_navigate
 
         if mcname is not None:
             self.open_mc(mcname)
@@ -362,6 +363,23 @@ class GuiFrame(wx.Frame):
             self.f = None
         self.mcname = None
 
+    def _format_title(self):
+        """Format window title based on current state."""
+        if self.mcname is None:
+            return self.title
+        path = self.dirlist.current_path
+        if path == "/":
+            return self.mcname + " - " + self.title
+        return self.mcname + " - " + path + " - " + self.title
+
+    def _on_dirlist_navigate(self):
+        """Called when the user navigates into or out of a directory."""
+        at_root = self.dirlist.current_path == "/"
+        self.toolbar.EnableTool(self.ID_CMD_IMPORT, self.mc is not None and at_root)
+        self.toolbar.EnableTool(self.ID_CMD_EXPORT, False)
+        if self.mc is not None:
+            self.SetTitle(self._format_title())
+
     def refresh(self):
         try:
             self.dirlist.update(self.mc)
@@ -371,16 +389,19 @@ class GuiFrame(wx.Frame):
             self.dirlist.update(None)
 
         mc = self.mc
+        at_root = self.dirlist.current_path == "/"
 
-        self.toolbar.EnableTool(self.ID_CMD_IMPORT, mc is not None)
+        self.toolbar.EnableTool(self.ID_CMD_IMPORT, mc is not None and at_root)
         self.toolbar.EnableTool(self.ID_CMD_EXPORT, False)
 
         if mc is None:
             status = "No memory card image"
+            self.SetTitle(self.title)
         else:
             free = mc.get_free_space() // 1024
             limit = mc.get_allocatable_space() // 1024
             status = "%dK of %dK free" % (free, limit)
+            self.SetTitle(self._format_title())
         self.statusbar.SetStatusText(status, 1)
 
     def open_mc(self, filename):
@@ -388,6 +409,7 @@ class GuiFrame(wx.Frame):
         self.statusbar.SetStatusText("", 1)
         if self.icon_win is not None:
             self.icon_win.load_icon(None, None)
+        self.dirlist.current_path = "/"
 
         f = None
         try:
@@ -404,7 +426,6 @@ class GuiFrame(wx.Frame):
         self.f = f
         self.mc = mc
         self.mcname = filename
-        self.SetTitle(filename + " - " + self.title)
         self.refresh()
 
     def delete_selected(self):
@@ -414,31 +435,38 @@ class GuiFrame(wx.Frame):
 
         selected = self.dirlist.selected
         dirtable = self.dirlist.dirtable
+        current_path = self.dirlist.current_path
 
-        dirnames = [
+        names = [
             dirtable[i].dirent[8].decode("ascii")
             for i in selected
         ]
         if len(selected) == 1:
             title = dirtable[list(selected)[0]].title
-            s = dirnames[0] + " (" + utils.single_title(title) + ")"
+            s = names[0] + " (" + utils.single_title(title) + ")"
         else:
-            s = ", ".join(dirnames)
+            s = ", ".join(names)
             if len(s) > 200:
                 s = s[:200] + "..."
         r = self.message_box(
             "Are you sure you want to delete " + s + "?",
-            "Delete Save File Confirmation",
+            "Delete Confirmation",
             wx.YES_NO,
         )
         if r != wx.YES:
             return
 
-        for dn in dirnames:
+        for i in selected:
+            entry = dirtable[i]
+            name = entry.dirent[8].decode("ascii")
+            fullpath = current_path.rstrip("/") + "/" + name
             try:
-                mc.rmdir("/" + dn)
+                if ps2mc.mode_is_dir(entry.dirent[0]):
+                    mc.rmdir(fullpath)
+                else:
+                    mc.remove(fullpath)
             except EnvironmentError as value:
-                self.mc_error(value, dn)
+                self.mc_error(value, name)
 
         mc.check()
         self.refresh()
@@ -539,7 +567,8 @@ class GuiFrame(wx.Frame):
 
     def evt_menu_open(self, event):
         # Enable/disable basic actions based on current state
-        self.import_menu_item.Enable(self.mc is not None)
+        at_root = self.dirlist.current_path == "/"
+        self.import_menu_item.Enable(self.mc is not None and at_root)
 
         selected = self.mc is not None and len(self.dirlist.selected) > 0
         self.export_menu_item.Enable(selected)
@@ -591,12 +620,49 @@ class GuiFrame(wx.Frame):
         icon_sys = entry.icon_sys
         mc = self.mc
 
-        if mc is None or icon_sys is None:
+        if mc is None:
+            self.icon_win.load_icon(None, None)
+            return
+
+        current_path = self.dirlist.current_path
+
+        # If inside a subdirectory and icon.sys is selected, parse and render it
+        if icon_sys is None and current_path != "/":
+            name = entry.dirent[8].decode("ascii")
+            if name == "icon.sys":
+                try:
+                    mc.chdir(current_path)
+                    f = mc.open("icon.sys", "rb")
+                    try:
+                        icon_sys_data = f.read()
+                    finally:
+                        f.close()
+                    icon_sys = ps2iconsys.IconSys(icon_sys_data)
+                    self.info1.SetLabel(icon_sys.get_title("ascii")[0])
+                    self.info2.SetLabel(icon_sys.get_title("ascii")[1])
+                    f = mc.open(icon_sys.icon_file_normal, "rb")
+                    try:
+                        icon = f.read()
+                    finally:
+                        f.close()
+                    self.icon_win.load_icon(icon_sys, icon)
+                    return
+                except Exception:
+                    pass
+            self.icon_win.load_icon(None, None)
+            return
+
+        if icon_sys is None:
+            self.icon_win.load_icon(None, None)
+            return
+
+        if not (entry.dirent[0] & ps2mc.DF_DIR):
             self.icon_win.load_icon(None, None)
             return
 
         try:
-            mc.chdir("/" + entry.dirent[8].decode("ascii"))
+            dirpath = current_path.rstrip("/") + "/" + entry.dirent[8].decode("ascii")
+            mc.chdir(dirpath)
             f = mc.open(icon_sys.icon_file_normal, "rb")
             try:
                 icon = f.read()
@@ -610,7 +676,8 @@ class GuiFrame(wx.Frame):
         self.icon_win.load_icon(icon_sys, icon)
 
     def evt_dirlist_select(self, event):
-        self.toolbar.EnableTool(self.ID_CMD_IMPORT, self.mc is not None)
+        at_root = self.dirlist.current_path == "/"
+        self.toolbar.EnableTool(self.ID_CMD_IMPORT, self.mc is not None and at_root)
         self.toolbar.EnableTool(
             self.ID_CMD_EXPORT,
             len(self.dirlist.selected) > 0,
@@ -841,6 +908,75 @@ class GuiFrame(wx.Frame):
 
         selected = self.dirlist.selected
         dirtable = self.dirlist.dirtable
+        current_path = self.dirlist.current_path
+
+        # Inside a subdirectory: extract raw files
+        if current_path != "/":
+            names = [dirtable[i].dirent[8].decode("ascii") for i in selected]
+            if not names:
+                return
+
+            dir = self.config.get_savefile_dir("")
+            if len(names) == 1:
+                fn = wx.FileSelector(
+                    "Extract " + names[0],
+                    dir,
+                    names[0],
+                    "",
+                    "All files (*.*)|*.*",
+                    (wx.FD_OVERWRITE_PROMPT | wx.FD_SAVE),
+                    self,
+                )
+                if fn == "":
+                    return
+                try:
+                    mc.chdir(current_path)
+                    f_in = mc.open(names[0], "rb")
+                    try:
+                        with open(fn, "wb") as f_out:
+                            while True:
+                                data = f_in.read(1024)
+                                if not data:
+                                    break
+                                f_out.write(data)
+                    finally:
+                        f_in.close()
+                except EnvironmentError as value:
+                    self.mc_error(value, names[0])
+                    return
+                dir = os.path.dirname(fn)
+                if os.path.isabs(dir):
+                    self.config.set_savefile_dir(dir)
+                self.message_box("Extracted " + fn + " successfully.")
+            else:
+                dir = wx.DirSelector("Extract Files", dir, parent=self)
+                if dir == "":
+                    return
+                count = 0
+                mc.chdir(current_path)
+                for name in names:
+                    fn = os.path.join(dir, name)
+                    try:
+                        f_in = mc.open(name, "rb")
+                        try:
+                            with open(fn, "wb") as f_out:
+                                while True:
+                                    data = f_in.read(1024)
+                                    if not data:
+                                        break
+                                    f_out.write(data)
+                        finally:
+                            f_in.close()
+                        count += 1
+                    except EnvironmentError as value:
+                        self.mc_error(value, name)
+                if count > 0:
+                    if os.path.isabs(dir):
+                        self.config.set_savefile_dir(dir)
+                    self.message_box("Extracted %d file(s) successfully." % count)
+            return
+
+        # At root: export save directories as .psu/.max
         sfiles = []
         for i in selected:
             dirname = dirtable[i].dirent[8].decode("ascii")
@@ -849,7 +985,7 @@ class GuiFrame(wx.Frame):
                 longname = ps2save.make_longname(dirname, sf)
                 sfiles.append((dirname, sf, longname))
             except EnvironmentError as value:
-                self.mc_error(value. dirname)
+                self.mc_error(value, dirname)
 
         if len(sfiles) == 0:
             return

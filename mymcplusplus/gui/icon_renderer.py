@@ -453,8 +453,8 @@ class IconRenderer:
         self._upload_icon()
 
         size = canvas.Size
-
-        glViewport(0, 0, size.Width, size.Height)
+        scale = canvas.GetContentScaleFactor()
+        glViewport(0, 0, int(size.Width * scale), int(size.Height * scale))
 
         if self.background_color is not None:
             glClearColor(*self.background_color, 1.0)

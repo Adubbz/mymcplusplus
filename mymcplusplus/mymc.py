@@ -97,6 +97,50 @@ def _copy(fout, fin):
         fout.write(s)
     
 
+def _tree_collect(mc, dirname, prefix=""):
+    """Collect all tree lines as (prefix+connector+name, ent) tuples."""
+    lines = []
+    dir = mc.dir_open(dirname)
+    try:
+        entries = [ent for ent in dir
+                   if (ent[0] & DF_EXISTS) and ent[8] not in (b".", b"..")]
+    finally:
+        dir.close()
+
+    for i, ent in enumerate(entries):
+        is_last = (i == len(entries) - 1)
+        connector = "└── " if is_last else "├── "
+        name = ent[8].decode("ascii")
+        lines.append((prefix + connector + name, ent))
+        if mode_is_dir(ent[0]):
+            extension = "    " if is_last else "│   "
+            lines.extend(_tree_collect(mc, dirname.rstrip("/") + "/" + name, prefix + extension))
+    return lines
+
+
+def _tree(mc, dirname, opts, prefix=""):
+    mode_bits = "rwxpfdD81C+KPH4"
+    lines = _tree_collect(mc, dirname, prefix)
+
+    if not opts.long:
+        for tree_part, ent in lines:
+            sys.stdout.write(tree_part + "\n")
+        return
+
+    max_width = max((len(tree_part) for tree_part, _ in lines), default=0)
+    for tree_part, ent in lines:
+        mode = ent[0]
+        mode_str = ""
+        for bit in range(0, 15):
+            mode_str += mode_bits[bit] if mode & (1 << bit) else "-"
+        tod = ent[3] if opts.creation_time else ent[6]
+        tm = time.localtime(tod_to_time(tod))
+        sys.stdout.write("%-*s  %s %7d %04d-%02d-%02d %02d:%02d:%02d\n" % (
+            max_width, tree_part, mode_str, ent[2],
+            tm.tm_year, tm.tm_mon, tm.tm_mday,
+            tm.tm_hour, tm.tm_min, tm.tm_sec))
+
+
 def do_ls(cmd, mc, opts, args, opterr):
     mode_bits = "rwxpfdD81C+KPH4"
 
@@ -105,6 +149,13 @@ def do_ls(cmd, mc, opts, args, opterr):
 
     out = sys.stdout
     args = glob_args(args, mc.glob)
+
+    if opts.recursive:
+        for dirname in args:
+            sys.stdout.write(dirname + "\n")
+            _tree(mc, dirname, opts)
+        return
+
     for dirname in args:
         dir = mc.dir_open(dirname)
         try:
@@ -520,7 +571,12 @@ cmd_table = {
            "[directory ...]",
            "List the contents of a directory.",
            [opt("-c", "--creation-time", action="store_true",
-            help = "Display creation times.")]),
+            help = "Display creation times."),
+            opt("-R", "--recursive", action="store_true",
+            help = "Display directory tree recursively."),
+            opt("-l", "--long-recursive", action="store_true",
+            dest="long",
+            help = "Show details (mode, size, timestamp) in tree mode. Only used with -R.")]),
     "extract": (do_extract, "rb",
             "filename ...",
             "Extract files from the memory card.",

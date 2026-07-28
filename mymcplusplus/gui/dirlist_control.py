@@ -49,21 +49,37 @@ class DirListControl(wx.ListCtrl):
             self.size = size
             self.title = title
 
+    _PARENT_ENTRY = 0x7FFFFFFE
+
     def __init__(self, parent, evt_focus, evt_select, config):
         self.config = config
         self.selected = set()
         self.dirtable = []
+        self.current_path = "/"
+        self._mc = None
+        self._on_navigate = None
+        self._updating = False
         # current sort state for column header clicks
         self.sort_column = self.Column.DIRECTORY
         self.sort_reverse = False
 
         self.evt_select = evt_select
+        self.evt_focus = evt_focus
         wx.ListCtrl.__init__(self, parent, wx.ID_ANY,
                              style=wx.LC_REPORT)
         self.Bind(wx.EVT_LIST_COL_CLICK, self.evt_col_click)
-        self.Bind(wx.EVT_LIST_ITEM_FOCUSED, evt_focus)
+        self.Bind(wx.EVT_LIST_ITEM_FOCUSED, self._evt_focus_wrapper)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.evt_item_selected)
         self.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.evt_item_deselected)
+        self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.evt_item_activated)
+
+    def _evt_focus_wrapper(self, event):
+        """Skip focus events for the '..' entry or during updates."""
+        if self._updating:
+            return
+        if event.GetData() == self._PARENT_ENTRY:
+            return
+        self.evt_focus(event)
 
     def _update_dirtable(self, mc, dir):
         self.dirtable = table = []
@@ -71,32 +87,41 @@ class DirListControl(wx.ListCtrl):
         if self.config.get_ascii():
             enc = "ascii"
         for ent in dir:
-            if not ps2mc.mode_is_dir(ent[0]):
+            mode = ent[0]
+            if not (mode & ps2mc.DF_EXISTS):
+                continue
+            name = ent[8].decode("ascii")
+            if name in (".", ".."):
                 continue
 
-            dirname = ent[8].decode("ascii")
-            dirpath = "/" + dirname
-
-            if ps2mc.mode_is_psx_dir(ent[0]):
-                type = self.TableEntry.Type.PS1
-                title = (dirname, "")
-                icon_sys = None
-            else:
-                type = self.TableEntry.Type.PS2
-                icon_sys_data = mc.get_icon_sys(dirpath)
-                if icon_sys_data is None:
-                    continue
-                icon_sys = ps2iconsys.IconSys(icon_sys_data)
-                title = icon_sys.get_title(enc)
-
-            size = mc.dir_size(dirpath)
-            table.append(self.TableEntry(type, ent, icon_sys, size, title))
+            if ps2mc.mode_is_dir(mode):
+                dirpath = self.current_path.rstrip("/") + "/" + name
+                if ps2mc.mode_is_psx_dir(mode):
+                    type = self.TableEntry.Type.PS1
+                    title = (name, "")
+                    icon_sys = None
+                else:
+                    type = self.TableEntry.Type.PS2
+                    icon_sys_data = mc.get_icon_sys(dirpath)
+                    if icon_sys_data is None:
+                        type = self.TableEntry.Type.PS1
+                        title = (name, "")
+                        icon_sys = None
+                    else:
+                        icon_sys = ps2iconsys.IconSys(icon_sys_data)
+                        title = icon_sys.get_title(enc)
+                size = mc.dir_size(dirpath)
+                table.append(self.TableEntry(type, ent, icon_sys, size, title))
+            elif self.current_path != "/":
+                # Show files when inside a subdirectory
+                table.append(self.TableEntry(
+                    self.TableEntry.Type.PS2, ent, None, ent[2], (name, "")))
 
     def update_dirtable(self, mc):
         self.dirtable = []
         if mc is None:
             return
-        dir = mc.dir_open("/")
+        dir = mc.dir_open(self.current_path)
         try:
             self._update_dirtable(mc, dir)
         finally:
@@ -136,6 +161,10 @@ class DirListControl(wx.ListCtrl):
         return result
 
     def cmp_dir_name(self, i1, i2):
+        if i1 == self._PARENT_ENTRY:
+            return -1
+        if i2 == self._PARENT_ENTRY:
+            return 1
         v1 = self.dirtable[i1].dirent[8]
         v2 = self.dirtable[i2].dirent[8]
         if v1 < v2:
@@ -147,6 +176,10 @@ class DirListControl(wx.ListCtrl):
         return self._apply_sort_direction(result)
 
     def cmp_dir_title(self, i1, i2):
+        if i1 == self._PARENT_ENTRY:
+            return -1
+        if i2 == self._PARENT_ENTRY:
+            return 1
         v1 = self.dirtable[i1].title
         v2 = self.dirtable[i2].title
         if v1 < v2:
@@ -158,6 +191,10 @@ class DirListControl(wx.ListCtrl):
         return self._apply_sort_direction(result)
 
     def cmp_dir_size(self, i1, i2):
+        if i1 == self._PARENT_ENTRY:
+            return -1
+        if i2 == self._PARENT_ENTRY:
+            return 1
         v1 = self.dirtable[i1].size
         v2 = self.dirtable[i2].size
         if v1 < v2:
@@ -169,6 +206,10 @@ class DirListControl(wx.ListCtrl):
         return self._apply_sort_direction(result)
 
     def cmp_dir_modified(self, i1, i2):
+        if i1 == self._PARENT_ENTRY:
+            return -1
+        if i2 == self._PARENT_ENTRY:
+            return 1
         m1 = list(self.dirtable[i1].dirent[6])
         m2 = list(self.dirtable[i2].dirent[6])
         # dirent[6] is a tuple like (sec, min, hour, day, month, year)
@@ -211,17 +252,49 @@ class DirListControl(wx.ListCtrl):
         self.SortItems(cmp)
 
     def evt_item_selected(self, event):
-        self.selected.add(event.GetData())
+        idx = event.GetData()
+        if idx == self._PARENT_ENTRY:
+            return
+        self.selected.add(idx)
         self.evt_select(event)
 
     def evt_item_deselected(self, event):
-        self.selected.discard(event.GetData())
+        idx = event.GetData()
+        if idx == self._PARENT_ENTRY:
+            return
+        self.selected.discard(idx)
         self.evt_select(event)
+
+    def evt_item_activated(self, event):
+        """Handle double-click: navigate into directories or go up with '..'."""
+        idx = event.GetData()
+        if idx == self._PARENT_ENTRY:
+            # '..' entry
+            self.navigate_up()
+            return
+        entry = self.dirtable[idx]
+        if entry.dirent[0] & ps2mc.DF_DIR:
+            dirname = entry.dirent[8].decode("ascii")
+            self.current_path = self.current_path.rstrip("/") + "/" + dirname
+            self.update(self._mc)
+            if self._on_navigate:
+                self._on_navigate()
+
+    def navigate_up(self):
+        if self.current_path == "/":
+            return
+        # Go up one level
+        self.current_path = "/".join(self.current_path.rstrip("/").split("/")[:-1]) or "/"
+        self.update(self._mc)
+        if self._on_navigate:
+            self._on_navigate()
 
     def update(self, mc):
         """Update the ListCtrl according to the contents of the
            memory card image."""
 
+        self._mc = mc
+        self._updating = True
         self.ClearAll()
         self.selected = set()
 
@@ -247,13 +320,25 @@ class DirListControl(wx.ListCtrl):
 
         self.update_dirtable(mc)
 
-        empty = len(self.dirtable) == 0
+        empty = len(self.dirtable) == 0 and self.current_path == "/"
         self.Enable(not empty)
-        if empty:
+
+        item_offset = 0
+        # Add '..' entry when not at root
+        if self.current_path != "/":
+            li = self.InsertItem(0, "..")
+            self.SetItem(li, 1, "")
+            self.SetItem(li, 2, "")
+            self.SetItem(li, 3, "(Parent Directory)")
+            self.SetItemData(li, self._PARENT_ENTRY)
+            item_offset = 1
+
+        if len(self.dirtable) == 0 and self.current_path == "/":
+            self._updating = False
             return
 
         for (i, a) in enumerate(self.dirtable):
-            li = self.InsertItem(i, a.dirent[8])
+            li = self.InsertItem(i + item_offset, a.dirent[8])
             self.SetItem(li, 1, "%dK" % (a.size // 1024))
             m = a.dirent[6]
             m = ("%04d-%02d-%02d %02d:%02d"
@@ -269,3 +354,4 @@ class DirListControl(wx.ListCtrl):
 
         # Apply default sort (Directory, ascending)
         self.SortItems(self.cmp_dir_name)
+        self._updating = False

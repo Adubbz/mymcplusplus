@@ -23,7 +23,7 @@ It is based on mymc+ by Florian Märkl and the classic mymc utility created by R
 
 setup(
     name="mymcplusplus",
-    version="3.1.0",
+    version="3.2.0",
     description="A PlayStation 2 memory card manager",
     long_description=long_description,
     long_description_content_type="text/plain",

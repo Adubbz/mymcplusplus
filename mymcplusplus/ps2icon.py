@@ -91,10 +91,13 @@ class Icon:
         length = len(data)
         offset = 0
 
-        offset = self.__load_header(data, length, offset)
-        offset = self.__load_vertex_data(data, length, offset)
-        offset = self.__load_animation_data(data, length, offset)
-        offset = self.__load_texture(data, length, offset)
+        try:
+            offset = self.__load_header(data, length, offset)
+            offset = self.__load_vertex_data(data, length, offset)
+            offset = self.__load_animation_data(data, length, offset)
+            offset = self.__load_texture(data, length, offset)
+        except FileTooSmall:
+            print("Warning: Icon file too small, rendering with available data.")
 
         if length > offset:
             print("Warning: Icon file larger than expected.")
@@ -209,11 +212,17 @@ class Icon:
         if offset == length:
             self.texture = [0xFFFF]
             return offset
-        
-        if self.tex_type == 0x7:
-            return self.__load_texture_uncompressed(data, length, offset)
-        else:
+
+        # bit 2 (0x04) indicates texture is present
+        if not (self.tex_type & 0x04):
+            self.texture = [0xFFFF]
+            return offset
+
+        # bit 3 (0x08) indicates compressed texture
+        if self.tex_type & 0x08:
             return self.__load_texture_compressed(data, length, offset)
+        else:
+            return self.__load_texture_uncompressed(data, length, offset)
 
 
     def __load_texture_uncompressed(self, data, length, offset):
@@ -247,7 +256,7 @@ class Icon:
             rle_code = int(data[offset + rle_offset]) | (int(data[offset + rle_offset + 1]) << 8)
             rle_offset += 2
 
-            if rle_code & 0xff00 == 0xff00: # use the next (0xffff - rle_code) * 2 bytes as they are
+            if rle_code & 0x8000: # use the next (0x10000 - rle_code) * 2 bytes as they are
                 sublength = (0x10000 - rle_code) * 2
                 if compressed_size < rle_offset + sublength:
                     raise Corrupt("Compressed data is too short.")
@@ -261,18 +270,19 @@ class Icon:
 
             else: # repeat next 2 bytes rle_code times
                 rep = rle_code
-                if compressed_size < rle_offset + 2:
-                    raise Corrupt("Compressed data is too short.")
-                if tex_offset + rep * 2 > _TEXTURE_SIZE:
-                    raise Corrupt("Decompressed data exceeds texture size.")
+                if rep > 0:
+                    if compressed_size < rle_offset + 2:
+                        raise Corrupt("Compressed data is too short.")
+                    if tex_offset + rep * 2 > _TEXTURE_SIZE:
+                        raise Corrupt("Decompressed data exceeds texture size.")
 
-                subdata = data[(offset + rle_offset):(offset + rle_offset + 2)]
-                rle_offset += 2
+                    subdata = data[(offset + rle_offset):(offset + rle_offset + 2)]
+                    rle_offset += 2
 
-                for i in range(rep):
-                    texture_buf[tex_offset] = subdata[0]
-                    texture_buf[tex_offset+1] = subdata[1]
-                    tex_offset += 2
+                    for i in range(rep):
+                        texture_buf[tex_offset] = subdata[0]
+                        texture_buf[tex_offset+1] = subdata[1]
+                        tex_offset += 2
 
         assert rle_offset == compressed_size
 

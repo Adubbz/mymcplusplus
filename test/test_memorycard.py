@@ -15,7 +15,7 @@
 # along with mymc+.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from mymcplus import mymc
+from mymcplusplus import mymc
 
 
 def md5(fn):
@@ -65,7 +65,7 @@ def test_extract(capsys, data, tmpdir):
 
 
 def test_add(monkeypatch, capsys, mc01_copy, tmpdir):
-    from mymcplus import ps2mc
+    from mymcplusplus import ps2mc
     patch_fixed_time(monkeypatch, ps2mc)
     patch_localtime(monkeypatch)
 
@@ -200,7 +200,7 @@ def test_dir(capsys, data):
 
 
 def test_format(monkeypatch, capsys, tmpdir):
-    from mymcplus import ps2mc
+    from mymcplusplus import ps2mc
     patch_fixed_time(monkeypatch, ps2mc)
 
     mc_file = tmpdir.join("mc.ps2").strpath
@@ -217,7 +217,7 @@ def test_format(monkeypatch, capsys, tmpdir):
 
 
 def test_mkdir(monkeypatch, capsys, mc01_copy):
-    from mymcplus import ps2mc
+    from mymcplusplus import ps2mc
     patch_fixed_time(monkeypatch, ps2mc)
 
     mc_file = mc01_copy.join("mc01.ps2").strpath
@@ -267,10 +267,12 @@ def test_export_psu(capsys, data, tmpdir):
                "export", "-d", tmpdir.strpath, "-p", "BESCES-50501REZ"])
 
     output = capsys.readouterr()
-    assert output.out == "Exporing BESCES-50501REZ to BESCES-50501REZ.psu\n"
+    # "Exporing" typo fixed to "Exporting" in code; longname is default since PR #22
+    assert output.out == "Exporting BESCES-50501REZ to SCES-50501 Rez (DD5DAEA3).psu\n"
     assert output.err == ""
 
-    assert md5(tmpdir.join("BESCES-50501REZ.psu").strpath) == "d86c82e559c8250c894fbbc4405d8789"
+    # Filename uses make_longname by default since PR #22
+    assert md5(tmpdir.join("SCES-50501 Rez (DD5DAEA3).psu").strpath) == "d86c82e559c8250c894fbbc4405d8789"
 
 
 def test_export_max(capsys, data, tmpdir):
@@ -281,13 +283,15 @@ def test_export_max(capsys, data, tmpdir):
                "export", "-d", tmpdir.strpath, "-m", "BESCES-50501REZ"])
 
     output = capsys.readouterr()
-    assert output.out == "Exporing BESCES-50501REZ to BESCES-50501REZ.max\n"
+    # "Exporing" typo fixed to "Exporting" in code; longname is default since PR #22
+    assert output.out == "Exporting BESCES-50501REZ to SCES-50501 Rez (DD5DAEA3).max\n"
 
-    assert md5(tmpdir.join("BESCES-50501REZ.max").strpath) == "3f63d38668a0a5a5fa508ab8c3bb469a"
+    # Filename uses make_longname by default since PR #22
+    assert md5(tmpdir.join("SCES-50501 Rez (DD5DAEA3).max").strpath) == "3f63d38668a0a5a5fa508ab8c3bb469a"
 
 
 def test_import_psu(monkeypatch, capsys, data, mc02_copy):
-    from mymcplus import ps2mc
+    from mymcplusplus import ps2mc
     patch_fixed_time(monkeypatch, ps2mc)
 
     mc_file = mc02_copy.join("mc02.ps2").strpath
@@ -305,9 +309,9 @@ def test_import_psu(monkeypatch, capsys, data, mc02_copy):
 
 
 def test_import_max(monkeypatch, capsys, data, mc02_copy):
-    from mymcplus import ps2mc
-    from mymcplus import ps2mc_dir
-    from mymcplus.save import ps2save
+    from mymcplusplus import ps2mc
+    from mymcplusplus import ps2mc_dir
+    from mymcplusplus.save import ps2save
     patch_fixed_time(monkeypatch, ps2mc)
     patch_fixed_time(monkeypatch, ps2mc_dir)
     patch_fixed_time(monkeypatch, ps2save)
@@ -326,7 +330,7 @@ def test_import_max(monkeypatch, capsys, data, mc02_copy):
 
 
 def test_import_sps(monkeypatch, capsys, data, mc02_copy):
-    from mymcplus import ps2mc
+    from mymcplusplus import ps2mc
     patch_fixed_time(monkeypatch, ps2mc)
 
     mc_file = mc02_copy.join("mc02.ps2").strpath
@@ -344,7 +348,7 @@ def test_import_sps(monkeypatch, capsys, data, mc02_copy):
 
 
 def test_import_xps(monkeypatch, capsys, data, mc02_copy):
-    from mymcplus import ps2mc
+    from mymcplusplus import ps2mc
     patch_fixed_time(monkeypatch, ps2mc)
 
     mc_file = mc02_copy.join("mc02.ps2").strpath
@@ -362,9 +366,9 @@ def test_import_xps(monkeypatch, capsys, data, mc02_copy):
 
 
 def test_import_cbs(monkeypatch, capsys, data, mc02_copy):
-    from mymcplus import ps2mc
-    from mymcplus import ps2mc_dir
-    from mymcplus.save import ps2save
+    from mymcplusplus import ps2mc
+    from mymcplusplus import ps2mc_dir
+    from mymcplusplus.save import ps2save
     patch_fixed_time(monkeypatch, ps2mc)
     patch_fixed_time(monkeypatch, ps2mc_dir)
     patch_fixed_time(monkeypatch, ps2save)
@@ -384,8 +388,8 @@ def test_import_cbs(monkeypatch, capsys, data, mc02_copy):
 
 
 def test_import_psv_ps2(monkeypatch, capsys, data, mc02_copy):
-    from mymcplus import ps2mc
-    from mymcplus import ps2mc_dir
+    from mymcplusplus import ps2mc
+    from mymcplusplus import ps2mc_dir
     patch_fixed_time(monkeypatch, ps2mc)
     patch_fixed_time(monkeypatch, ps2mc_dir)
 
@@ -404,8 +408,8 @@ def test_import_psv_ps2(monkeypatch, capsys, data, mc02_copy):
 
 
 def test_import_psv_ps1(monkeypatch, capsys, data, mc02_copy):
-    from mymcplus import ps2mc
-    from mymcplus import ps2mc_dir
+    from mymcplusplus import ps2mc
+    from mymcplusplus import ps2mc_dir
     patch_fixed_time(monkeypatch, ps2mc)
     patch_fixed_time(monkeypatch, ps2mc_dir)
 

@@ -28,7 +28,7 @@ def data(tmpdir_factory):
     data_dir = tmpdir_factory.mktemp("data")
     path = os.path.join(test_dir, "data.tar.gz")
     tar = tarfile.open(path)
-    tar.extractall(data_dir.strpath)
+    tar.extractall(data_dir.strpath, filter="data")
     return data_dir
 
 @pytest.fixture

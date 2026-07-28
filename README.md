@@ -80,6 +80,48 @@ Options:
   -e, --no-ecc      Create virtual memory card without ecc. Useful for SD2PSX/MemCard PRO2
 ```
 
+### Tree-style Directory Listing
+
+Use `ls -R` to display the memory card's directory structure as a tree:
+
+```
+mymcplusplus card.mc2 ls -R
+```
+
+```
+/
+├── BASLUS-21313FrndsUS
+│   ├── BASLUS-21313FrndsUS
+│   ├── icon.sys
+│   └── icon1.ico
+└── PSDCGT-01412
+    ├── game.ico
+    └── icon.sys
+```
+
+Add `-l` to show mode bits, file size, and timestamps:
+
+```
+mymcplusplus card.mc2 ls -R -l
+```
+
+```
+/
+├── BASLUS-21313FrndsUS      rwx--d----+----       5 2025-09-26 21:50:42
+│   ├── BASLUS-21313FrndsUS  rwx-f--8--+----   47490 2025-09-26 21:50:41
+│   ├── icon.sys             rwx-f--8--+----     964 2025-09-26 21:50:41
+│   └── icon1.ico            rwx-f--8--+----   41528 2025-09-26 21:50:42
+└── PSDCGT-01412             rwx--d----+----      13 2025-06-11 21:53:58
+    ├── game.ico             rwx-f--8--+----   33688 2025-05-25 13:46:31
+    └── icon.sys             rwx-f--8--+----     964 2025-05-25 13:46:32
+```
+
+Add `-c` to show creation times instead of modification times:
+
+```
+mymcplusplus card.mc2 ls -R -l -c
+```
+
 It is always necessary to specify the path to a memory card image
 with `-i <path>` first. For example:
 

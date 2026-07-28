@@ -150,7 +150,7 @@ class IconWindow(wx.Window):
 
         self.canvas.Bind(wx.EVT_PAINT, self.paint)
 
-        self.sizer.Add(self.canvas, wx.EXPAND, wx.EXPAND)
+        self.sizer.Add(self.canvas, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
 
         #self.config = config = mymcsup.icon_config()

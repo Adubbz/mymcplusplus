@@ -15,5 +15,5 @@
 # along with mymc+.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-MYMC_VERSION_BUILD = r'''0'''
+MYMC_VERSION_BUILD = r'''2'''
 MYMC_VERSION_MAJOR = r'''3'''

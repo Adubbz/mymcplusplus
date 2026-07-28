@@ -17,7 +17,7 @@
 
 import base64
 
-from mymcplus import ps2iconsys
+from mymcplusplus import ps2iconsys
 
 _icon_sys_data = base64.b64decode(
     b"UFMyRAAAIAAAAAAAcwAAABQAAAAUAAAAPAAAAAAAAAAUAAAAFAAAADwAAAAAAAAAFAAAABQAAAA8"
