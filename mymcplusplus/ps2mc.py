@@ -31,6 +31,7 @@ from .ps2mc_dir import *
 from .save import ps2save
 
 PS2MC_MAGIC = b"Sony PS2 Memory Card Format "
+SC2MC_MAGIC = b"Memory Card for SoulCaliburII"
 PS2MC_FAT_ALLOCATED_BIT = 0x80000000
 PS2MC_FAT_CHAIN_END = 0xFFFFFFFF
 PS2MC_FAT_CHAIN_END_UNALLOC = 0x7FFFFFFF
@@ -616,6 +617,8 @@ class ps2mc(object):
         
         f.seek(0)
         s = f.read(0x154)
+        if s.startswith(SC2MC_MAGIC):
+            raise error("SoulCalibur II Conquest Card for SYSTEM246 detected\nSkipping format to protect the file")
         if len(s) != 0x154 or not s.startswith(PS2MC_MAGIC):
             if (params == None):
                 raise corrupt("Not a PS2 memory card image",
